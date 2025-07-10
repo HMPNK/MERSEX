@@ -3,7 +3,7 @@
 ### Prerequisites
 Install KMC, GNU parallel, pigz and mawk
 ### Server requirements
-currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual) had a peak mem usage of approximately 128 Gb and a runtime of ~3h.
+currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual) had a peak mem usage of approximately 128 Gb and a runtime of ~4h.
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools

@@ -51,4 +51,4 @@ awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-
 
 #analyse female/male specificity
 export FCOUNT="$(awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | grep ^f | wc -l)"
-pigz -dc FINAL-table.gz | parallel --keep-order -j 16 -l 10000000 --pipe 'mawk -v cmin=2 -v fcount=$FCOUNT -f count.samples.awk - ' | pigz -c > FINAL-table.sample-counts-cmin2.gz
+pigz -dc FINAL-table.gz | parallel --keep-order -j 16 -l 2000000 --pipe 'mawk -v cmin=2 -v fcount=$FCOUNT -f count.samples.awk - ' | pigz -c > FINAL-table.sample-counts-cmin2.gz

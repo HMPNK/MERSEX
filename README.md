@@ -1,13 +1,13 @@
 # MERSEX
 ## SuperFast Kmer based sex marker search for wgs datasets
 ### Prerequisites
-Install KMC, GNU parallel, pigz and mawk
+Install KMC, IDBA, GNU parallel, pigz and mawk
 ### Server requirements
 currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual) had a peak mem usage of approximately 128 Gb and a runtime of ~4h.
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools
-mamba create -n MERSEX -c bioconda kmc pigz mawk parallel
+mamba create -n MERSEX -c bioconda kmc pigz mawk parallel idba
 
 #activate profile
 mamba activate MERSEX

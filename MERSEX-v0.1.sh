@@ -46,9 +46,7 @@ awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-
 awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | awk '{gsub(".list.res",".counts.gz",$3);print "gunzip -c all_"$3" > "$1" &"}' | bash
 mkfifo start
 gunzip -c all.kmers.gz > start &
-#final table merge and compress
-awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | awk 'BEGIN{text="start";} {text=text" "$1;} END{print "paste "text" | pigz -c > FINAL-table.gz"; }' | bash
 
-#analyse female/male specificity
+#final table merge, Kmer-positive female/male counting and compress
 export FCOUNT="$(awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | grep ^f | wc -l)"
-pigz -dc FINAL-table.gz | parallel --keep-order -j 16 -l 2000000 --pipe 'mawk -v cmin=2 -v fcount=$FCOUNT -f count.samples.awk - ' | pigz -c > FINAL-table.sample-counts-cmin2.gz
+awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | awk 'BEGIN{text="start";} {text=text" "$1;} END{print "paste "text; }' | bash | parallel --keep-order -j 16 -l 1000000 --pipe 'mawk -v cmin=2 -v fcount=$FCOUNT -f count.samples.awk - ' | pigz -c > FINAL-table.tsv.gz

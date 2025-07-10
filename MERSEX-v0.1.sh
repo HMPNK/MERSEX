@@ -20,13 +20,13 @@ cat KMC_BATCH.sh | nohup parallel -j 4
 find males/ females/ | grep fq.gz | sort -V | cut -f 1 -d '_' | uniq | awk 'BEGIN{print "INPUT:";}{n=split($1,a,"/");if(a[1]=="males"){i++;print "m"i" = " a[2]".list.res";text=text"m"i" + "} else if(a[1]=="females"){j++;print "f"j" = " a[2]".list.res";text=text"f"j" + "}} END{print "OUTPUT:\nallunion = "substr(text,1,length(text)-2)"\nOUTPUT_PARAMS:\n-cs1000000"}' > union-op-def.file
 
 #execute union
-kmc_tools complex union-op-def.file
+kmc_tools complex union-op-def.file (may use lots of memory here)
 
 #remove counts from union
 kmc_tools transform allunion compact allunion-nocounts
 
 #replace counts of all kmers with those of single samples (no match kmers will have count "1" !!!)
-#and dump all counts to gzipped files (16 threads in parallel work!);correct value 1 to 0 for zero occurence kmers
+#and dump all counts to gzipped files (16 threads in parallel work!)
 ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright; kmc_dump all_"n" /dev/stdout | cut -f 2 | pigz -c > all_"n".counts.gz; rm all_"n"*kmc_*"}' | nohup parallel -j 4
 
 #remove old KMC-DBs

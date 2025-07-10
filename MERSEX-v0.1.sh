@@ -1,8 +1,8 @@
-## A PIPELINE FOR FINDING SEX-specific kmers ##
+##A PIPELINE FOR FINDING SEX-specific kmers ##
 #NOT for POOLSEX data! Needs sequencing from individuals!
 #needs at least 7-10x whole genome coverage per sample (not tested on lower so far)
 #read files MUST be sorted by sex and go to folder "males" and folder "females"
-#read files naming scheme MUST BE <sample-id>_1.fq.gz and <sample-id>_2.fq.gz (single reads will work, multiple files per sample-id, too)
+#read files naming scheme MUST BE <sample-id>_1.fq.gz and <sample-id>_2.fq.gz
 
 #creating list of readfiles per sample id
 find males/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);;print $1 > a[2]".list"}'
@@ -26,13 +26,11 @@ kmc_tools complex union-op-def.file
 kmc_tools transform allunion compact allunion-nocounts
 
 #replace counts of all kmers with those of single samples (no match kmers will have count "1" !!!)
-ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright"}' | nohup parallel -j 10
+#and dump all counts to gzipped files (16 threads in parallel work!);correct value 1 to 0 for zero occurence kmers
+ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright; kmc_dump all_"n" /dev/stdout | cut -f 2 | pigz -c > all_"n".counts.gz; rm all_"n"*kmc_*"}' | nohup parallel -j 4
 
 #remove old KMC-DBs
 rm *res* -f
-
-#dump all counts to gzipped files (16 threads in parallel work!);correct value 1 to 0 for zero occurence kmers
-ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_dump all_"n" /dev/stdout | cut -f 2 | mawk '{if($1==1){$1=0};print}' | pigz -c > all_"n".counts.gz"}' | nohup parallel -j 20
 
 #dump all kmers for once
 kmc_dump allunion /dev/stdout | cut -f 1 | pigz -c > all.kmers.gz

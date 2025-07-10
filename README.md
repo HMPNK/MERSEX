@@ -25,3 +25,6 @@ cd MERSEX
 bash MERSEX-v0.1.sh
 
 ```
+
+### Future plans
+may implement kmer-db for faster building of Final table etc...

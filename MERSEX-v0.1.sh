@@ -27,6 +27,7 @@ kmc_tools transform allunion compact allunion-nocounts
 
 #replace counts of all kmers with those of single samples (no match kmers will have count "1" !!!)
 #and dump all counts to gzipped files (8 threads in parallel work!)
+#the combination of these steps saves disk space (increasing parallel threads will use more disk for temporary kmc databases!)
 ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright; kmc_dump all_"n" /dev/stdout | cut -f 2 | pigz -c > all_"n".counts.gz; rm all_"n"*kmc_*"}' | nohup parallel -j 8
 
 #remove old KMC-DBs

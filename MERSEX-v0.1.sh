@@ -26,7 +26,7 @@ kmc_tools complex union-op-def.file
 kmc_tools transform allunion compact allunion-nocounts
 
 #replace counts of all kmers with those of single samples (no match kmers will have count "1" !!!)
-ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple -t4 allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright"}' | nohup parallel -j 20
+ls *list | awk '{n=$1;gsub(".list","",n);print "kmc_tools simple allunion-nocounts -ci0 "$1".res -ci0 union all_"n" -ocright"}' | nohup parallel -j 10
 
 #remove old KMC-DBs
 rm *res* -f

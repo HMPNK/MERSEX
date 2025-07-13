@@ -50,3 +50,14 @@ gunzip -c all.kmers.gz > start &
 #final table merge, Kmer-positive female/male counting and compress
 export FCOUNT="$(awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | grep ^f | wc -l)"
 awk '{if($1!="INPUT:" && $1!="OUTPUT:"){print};if($1=="OUTPUT:"){exit;}}' union-op-def.file | awk 'BEGIN{text="start";} {text=text" "$1;} END{print "paste "text; }' | bash | parallel --keep-order -j 16 -l 1000000 --pipe 'mawk -v cmin=2 -v fcount=$FCOUNT -f count.samples.awk - ' | pigz -c > FINAL-table.tsv.gz
+
+#clean-up
+#remove FIFOs
+rm -f start f? f?? f??? m? m?? m???
+#remove lists and related
+rm -f *list* nohup.out
+#remove tmp-dir
+rm kmc_tmp_dir/ -rf
+#remove temporary count-files
+rm -f *.counts.gz all.kmers.gz
+

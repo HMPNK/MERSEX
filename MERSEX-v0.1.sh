@@ -19,8 +19,8 @@ cat KMC_BATCH.sh | nohup parallel -j 4
 #create operations file for union of all kmers
 find males/ females/ | grep fq.gz | sort -V | cut -f 1 -d '_' | uniq | awk 'BEGIN{print "INPUT:";}{n=split($1,a,"/");if(a[1]=="males"){i++;print "m"i" = " a[2]".list.res";text=text"m"i" + "} else if(a[1]=="females"){j++;print "f"j" = " a[2]".list.res";text=text"f"j" + "}} END{print "OUTPUT:\nallunion = "substr(text,1,length(text)-2)"\nOUTPUT_PARAMS:\n-cs1000000"}' > union-op-def.file
 
-#execute union
-kmc_tools complex union-op-def.file (may use lots of memory here)
+#execute union (may use lots of memory here)
+kmc_tools complex union-op-def.file
 
 #remove counts from union
 kmc_tools transform allunion compact allunion-nocounts

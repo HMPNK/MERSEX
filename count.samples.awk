@@ -38,6 +38,6 @@ for(x=fcount+2;x<=n;x++)        {
     d = m2
 
     p = fisher_log(a, b, c, d)
-
+#p-value goes to 1st field:
 print p"\t"a"\t"b"\t"c"\t"d"\t"$0;
 }

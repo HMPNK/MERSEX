@@ -15,21 +15,27 @@ function fisher_log(a, b, c, d,   n, log_p, p) {
     return p
 }
 
+
+BEGIN{
+if(cmin1==""){cmin1=2};
+if(cmin2==""){cmin2=1};
+}
+
 {
-n=split($0,a,"\t");
+n=split($0,ar,"\t");
 f=0;f2=0;m=0;m2=0;
 for(x=2;x<=fcount+1;x++)        {
-                        if(a[x]>=cmin){f++} else{f2++}
+                        if(ar[x]>=cmin1){f++} else if(ar[x]<=cmin2){f2++}
                         };
 
 for(x=fcount+2;x<=n;x++)        {
-                        if(a[x]>=cmin){m++} else{m2++}
+                        if(ar[x]>=cmin1){m++} else if(ar[x]<=cmin2){m2++}
                         };
 
     a = f
     b = f2
-    c = m2
-    d = m
+    c = m
+    d = m2
 
     p = fisher_log(a, b, c, d)
 

@@ -40,5 +40,5 @@ for(x=fcount+2;x<=n;x++)        {
     p = fisher_log(a, b, c, d)
 
 print p"\t"a"\t"b"\t"c"\t"d"\t"$0;
-if(pval!="" && p<=pval) {print p"\t"a"\t"b"\t"c"\t"d"\t"$0 > "Pval"pval".tsv"};
+if(pval!="" && p<=pval) {print p"\t"a"\t"b"\t"c"\t"d"\t"$0 >> "Pval"pval".tsv"};
 }

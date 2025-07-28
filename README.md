@@ -24,7 +24,7 @@ cd MERSEX
 #a minimum of 10 males and 10 females is recommended, more always makes sense... 
 
 #run the script
-bash MERSEX-v0.1.sh
+bash MERSEX-v0.2.sh
 
 ```
 

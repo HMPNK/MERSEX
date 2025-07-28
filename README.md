@@ -1,5 +1,5 @@
 # MERSEX
-## SuperFast Kmer based sex marker search for wgs datasets
+## SuperFast Kmer based / reference free sex marker search for wgs datasets
 ### Prerequisites
 Install KMC, IDBA, GNU parallel, pigz and mawk
 ### Server requirements

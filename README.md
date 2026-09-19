@@ -32,4 +32,4 @@ bash MERSEX-v0.2.sh
 ```
 
 ### Future plans
-may implement kmer-db for faster building of Final table etc...
+improve KMC-database merging

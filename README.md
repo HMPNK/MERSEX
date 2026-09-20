@@ -16,7 +16,7 @@ mamba activate MERSEX
 git clone https://github.com/HMPNK/MERSEX.git
 cd MERSEX
 cd KMC-MERGE-TOOL-HMPNK
-bash COMPILE.sh #(you max have to install g++ and libraries first)
+bash COMPILE.sh #(you may have to install g++ and libraries first)
 cd ..
 
 #Copy or link your female data in directory "females" and your male data in directory "males"

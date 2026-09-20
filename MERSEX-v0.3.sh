@@ -13,6 +13,7 @@ set -u
 #settings (currently optimized for server with =128 GB RAM, >=1TB FREE DISK, >=12 CPU THREADS)
 export KMCTHREADS=6  #kmc kmer counting of fastq files, number of threads
 export KMCJOBS=2     #kmc kmer counting of fastq files, number of kmc jobs running in parallel
+                     #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
 export KMCMEM=60     #max memory per KMC job
 export MERGE=6       #reading threads for kmc_merge (the number of true CPU cores is optimal)
 export PVAL=0.01     #P-value cut off, vales equal or smaller than this go to signifcant sex differences table

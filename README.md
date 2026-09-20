@@ -29,8 +29,8 @@ bash MERSEX-v0.2.sh
 ```
 
 ### Future plans
-improve KMC-database merging
-Improved tool for KMC database merging is in KMC-MERGE-TOOL-HMPNK. Run bash COMPILE.sh for creating the executable kmc_merge.
+a) improve KMC-database merging.
+An improved tool for KMC database merging is in KMC-MERGE-TOOL-HMPNK. Run bash COMPILE.sh for creating the executable kmc_merge.
 Not yet integrated in Pipeline.
-#OPTIONALLY, compile kmer average count calculator (not implemented in pipeline yet)
+b) compile kmer average count calculator (not implemented in pipeline yet)
 g++ -O3 -march=native -mavx2 -std=c++17 -pthread -o kmer_avg_calc kmer_avg_calc.cpp

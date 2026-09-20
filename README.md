@@ -16,9 +16,6 @@ mamba activate MERSEX
 git clone https://github.com/HMPNK/MERSEX.git
 cd MERSEX
 
-#OPTIONALLY, compile kmer average count calculator (not implemented in pipeline yet)
-g++ -O3 -march=native -mavx2 -std=c++17 -pthread -o kmer_avg_calc kmer_avg_calc.cpp
-
 #Copy or link your female data in directory "females" and your male data in directory "males"
 #make sure that each individual has its ID separated with "_" in the filename
 #and the filename contains only one "_": for example F1_1.fq.gz, F2_1.fq.gz, M1_xyz.fq.gz, M2_abc.fq.gz M2_def.fq.gz
@@ -35,3 +32,5 @@ bash MERSEX-v0.2.sh
 improve KMC-database merging
 Improved tool for KMC database merging is in KMC-MERGE-TOOL-HMPNK. Run bash COMPILE.sh for creating the executable kmc_merge.
 Not yet integrated in Pipeline.
+#OPTIONALLY, compile kmer average count calculator (not implemented in pipeline yet)
+g++ -O3 -march=native -mavx2 -std=c++17 -pthread -o kmer_avg_calc kmer_avg_calc.cpp

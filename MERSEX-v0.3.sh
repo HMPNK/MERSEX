@@ -18,7 +18,7 @@ export KMCMEM=60     #max memory per KMC job
 export MERGE=6       #reading threads for kmc_merge (the number of true CPU cores is optimal)
 export PVAL=0.01     #P-value cut off, vales equal or smaller than this go to signifcant sex differences table
 export LOWCOV=0      #Set to 1 for low sequencing coverage data (1-6x) per individual (genome skimming approaches), may increase runtime and disk usage!
-export KPOS=1	       #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
+export KPOS=1        #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
 export KNEG=0        #Kmer counts equal or lower are treated as no match (kmer absent in sample) in fisher test
 
 #creating list of readfiles per sample id (for low coverage data we just use each file twice to meet the minimum kmer criteria of 2!)

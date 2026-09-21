@@ -29,6 +29,8 @@ cd ..
 #run the script
 bash MERSEX.sh
 
+#PS: The core dump of the idba_ud assembler can be ignored.
+This is expected behavior, given that we do not have paired end reads, which the assembler expects in the last step after contigs have already been build.
 ```
 ### Latest changes v0.3:
 * streamlined pipeline, faster, less disk IO

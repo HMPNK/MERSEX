@@ -66,3 +66,7 @@ echo "Number of   male samples: "$MCOUNT
 echo "Extracting male/female specific kmers (p-value cutoff $PVAL)"
 pigz -dc KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL -t $PJOBS --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
 echo "Done."
+
+echo "counts of top significant kmers"
+pigz -dc KMCMERGED_pval$PVAL.tsv.gz |sort -k1,1g | cut -f 1-5 | uniq -c | head
+

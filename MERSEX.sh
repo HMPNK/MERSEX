@@ -43,7 +43,7 @@ else
 fi
 
 #CREATING KMC RUNs per sample
-ls *.list | awk -v cpu=$KMCTHREADS -v mem=$KMCMEM '{gsub(".list","");print "kmc -sm"mem" -t"cpu" -k27 -r @"$1".list "$1" ./kmc_tmp_dir/ > "$1".kmc.log 2>&1"}' > KMC_BATCH.sh
+ls *.list | awk -v cpu=$KMCTHREADS -v mem=$KMCMEM -v ksize=$KSIZE '{gsub(".list","");print "kmc -k"ksize" -sm"mem" -t"cpu" -k27 -r @"$1".list "$1" ./kmc_tmp_dir/ > "$1".kmc.log 2>&1"}' > KMC_BATCH.sh
 
 #executing KMC runs
 mkdir ./kmc_tmp_dir

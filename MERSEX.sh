@@ -14,12 +14,12 @@ set -u
 #read files or corresponding symbolic links naming scheme MUST BE <sample-id>_xyz.1.fq.gz and <sample-id>_xyz.2.fq.gz !!!
 # "xyz." may be omitted or used as an additional unique identifier, if needed (see README.md for more explanations).
 
-#settings (currently optimized for server with =128 GB RAM, >=1TB FREE DISK, >=12 CPU THREADS)
+#settings (currently optimized for server with =256 GB RAM, >=1TB FREE DISK, >=80 CPU THREADS)
 export LOWCOV=0      #Set to 1 for low sequencing coverage data (1-6x) per individual (genome skimming approaches), may increase runtime and disk usage!
 
 export KSIZE=27      #Kmer size used (27 is a good start, higher kmers not tested so far)
-export KMCTHREADS=6  #kmc kmer counting of fastq files, number of threads
-export KMCJOBS=2     #kmc kmer counting of fastq files, number of kmc jobs running in parallel
+export KMCTHREADS=20  #kmc kmer counting of fastq files, number of threads
+export KMCJOBS=4     #kmc kmer counting of fastq files, number of kmc jobs running in parallel
                      #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
 export KMCMEM=60     #max memory per KMC job
 

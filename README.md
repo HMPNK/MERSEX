@@ -15,7 +15,7 @@ mamba activate MERSEX
 #get the repository
 git clone https://github.com/HMPNK/MERSEX.git
 cd MERSEX
-cd KMC-MERGE-TOOL-HMPNK
+cd src
 bash COMPILE.sh #(you may have to install g++ and libraries first)
 cd ..
 

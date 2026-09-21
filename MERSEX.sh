@@ -25,7 +25,7 @@ export MERGE=6       #reading threads for kmc_merge (6 threads is typically enou
 export KPOS=1        #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
 export KNEG=0        #Kmer counts equal or lower are treated as no match (kmer absent in sample) in fisher test
 export PVAL=0.01     #P-value cut off, values equal or smaller than this go to signifcant sex differences table
-export PJOBS=6       #number of threads for creating significant sex differences table
+export PJOBS=8       #number of threads for creating significant sex differences table
 
 #creating list of readfiles per sample id (for low coverage data we just use each file twice to meet the minimum kmer criteria of 2!)
 if [ $LOWCOV -eq 0 ]
@@ -62,7 +62,7 @@ echo "Number of   male samples: "$MCOUNT
 
 #Extract significant sex differentiating kmers:
 echo "Extracting male/female specific kmers (p-value cutoff $PVAL)"
-pigz -dc KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL -t $PJOBS --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
+rapidgzip -P $PJOBS -dc KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
 echo "Done."
 
 echo "counts of top significant kmers"

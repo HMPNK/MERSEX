@@ -45,6 +45,8 @@ ls *.list | awk -v cpu=$KMCTHREADS -v mem=$KMCMEM -v ksize=$KSIZE '{gsub(".list"
 #executing KMC runs
 mkdir ./kmc_tmp_dir
 #not more than 4 parallel jobs! IO is limiting! Instead more kmc threads (i.e. -t20 )
+date
+echo "Starting KMC jobs"
 cat KMC_BATCH.sh | nohup parallel -j $KMCJOBS
 
 #dump Dbs to single table
@@ -53,6 +55,7 @@ export KMCDBS="$(find | cut -f 2 -d'/' | grep kmc_pre$ | sed "s/.kmc_pre//g" |so
 export FCOUNT="$(find | cut -f 2 -d'/' | grep kmc_pre$ | grep ^female | wc -l )"
 export MCOUNT="$(find | cut -f 2 -d'/' | grep kmc_pre$ | grep ^male | wc -l )"
 
+date
 echo "Merging KMC databases into table:"
 echo $KMCDBS
 echo "Number of female samples: "$FCOUNT
@@ -61,6 +64,7 @@ echo "Number of   male samples: "$MCOUNT
 ./kmc_merge -b 131072 -S 131072 -L 4097 -t $MERGE -z -o KMCMERGED.tsv.gz $KMCDBS
 
 #Extract significant sex differentiating kmers:
+date
 echo "Extracting male/female specific kmers (p-value cutoff $PVAL)"
 rapidgzip -P $PJOBS -d -c KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
 echo "Done."
@@ -68,9 +72,11 @@ echo "Done."
 echo "counts of top significant kmers"
 pigz -dc KMCMERGED_pval$PVAL.tsv.gz |sort -k1,1g | cut -f 1-5 | uniq -c | head
 
+date
 echo "Assembly of male/female specific kmers into contigs"
 pigz -dc KMCMERGED_pval$PVAL.tsv.gz | sort -k1,1g | mawk '{if(i!=0){i++;print ">kmer"i-1"_pval_"$1"\n"$6} else{i++}}' > kmers_pval$PVAL.fa
 idba_ud -l kmers_pval$PVAL.fa -o kmer-assembly --mink 17 --maxk $KSIZE --step 1 --no_local --no_coverage --no_correct --num_threads 4 --no_bubble --min_contig $KSIZE --similar 1 > kmer-pval$PVAL-assembly.log 2>&1
 cp kmer-assembly/contig-$KSIZE.fa kmer-pval$PVAL-assembly.fa
 
 echo "MERSEX pipeline finished."
+date

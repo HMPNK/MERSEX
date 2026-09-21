@@ -45,7 +45,7 @@ mkdir ./kmc_tmp_dir
 #not more than 4 parallel jobs! IO is limiting! Instead more kmc threads (i.e. -t20 )
 cat KMC_BATCH.sh | nohup parallel -j $KMCJOBS
 
-#dump to table
+#dump Dbs to single table
 
 export KMCDBS="$(find | cut -f 2 -d'/' | grep kmc_pre$ | sed "s/.kmc_pre//g" |sort -V | awk '{printf $1" "}' )"
 export FCOUNT="$(find | cut -f 2 -d'/' | grep kmc_pre$ | grep ^female | wc -l )"
@@ -56,7 +56,6 @@ echo $KMCDBS
 echo "Number of female samples: "$FCOUNT
 echo "Number of   male samples: "$MCOUNT
 
-#!!!IMPROVE!!! integrate FISHER-TEST into kmc_merge later (will speed it up)!!!
 ./kmc_merge -b 131072 -S 131072 -L 4097 -t $MERGE -z -o KMCMERGED.tsv.gz $KMCDBS
 
 #Extract significant sex differentiating kmers:

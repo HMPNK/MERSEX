@@ -30,7 +30,7 @@ export PJOBS=8        #number of threads for creating significant sex difference
 
 #creating list of readfiles per sample id (for low coverage data we just use each file twice to meet the minimum kmer criteria of 2!)
 
-        echo "Storing kmers with counts larger than $MINCNT into KMC-DBs (see MINCNT in options)"
+        echo "Storing kmers with counts equal to or larger than $MINCNT into KMC-DBs (see MINCNT in options)"
         find males/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1 > "male-"a[2]".list"}'
         find females/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1 > "female-"a[2]".list"}'
 

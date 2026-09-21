@@ -27,9 +27,9 @@ cd ..
 #a minimum of 10 males and 10 females is recommended, more always makes sense... 
 
 #run the script
-bash MERSEX.sh
+bash MERSEX.sh > mersex.log 2>&1 &
 
-#PS: The core dump of the idba_ud assembler can be ignored.
+#PS: The core dump of the idba_ud assembler in the log file can be ignored.
 #This is expected behavior, given that we do not have paired end reads,
 #which the assembler expects in the last step after contigs have already been build.
 

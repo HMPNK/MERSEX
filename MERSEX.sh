@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+export LANG=en_US.UTF-8   #Important for sort order of some outputs
 #VERSION 0.3
 
 ##A PIPELINE FOR FINDING SEX-specific kmers ##

@@ -30,3 +30,8 @@ cd ..
 bash MERSEX.sh
 
 ```
+###Latest changes v0.3:
+streamlined pipeline
+C++ tool kmc_merge for fast and memory efficient DB merging (up to hundreds)
+C++ tool fisher_mt for sex specific significance calculations and extraction of most significant kmers
+Assembly of significant kmers into contigs

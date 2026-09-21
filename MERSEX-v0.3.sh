@@ -8,7 +8,9 @@ set -u
 #needs at least 6-10x whole genome coverage per sample
 #Set LOWCOV=1 for datasets with less than 6x whole genome coverage
 #read files MUST be sorted by sex and go to folder "males" and folder "females"
-#read files naming scheme MUST BE <sample-id>_1.fq.gz and <sample-id>_2.fq.gz !!!
+#Best practice is to create symbolic links (by ln -s) to your raw reads data in those directories
+#read files or corresponding symbolic links naming scheme MUST BE <sample-id>_xyz.1.fq.gz and <sample-id>_xyz.2.fq.gz !!!
+# "xyz." may be omitted or used as an additional unique identifier, if needed.
 
 #settings (currently optimized for server with =128 GB RAM, >=1TB FREE DISK, >=12 CPU THREADS)
 export LOWCOV=0      #Set to 1 for low sequencing coverage data (1-6x) per individual (genome skimming approaches), may increase runtime and disk usage!

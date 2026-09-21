@@ -17,6 +17,7 @@ set -u
 #settings (currently optimized for server with =128 GB RAM, >=1TB FREE DISK, >=12 CPU THREADS)
 export LOWCOV=0      #Set to 1 for low sequencing coverage data (1-6x) per individual (genome skimming approaches), may increase runtime and disk usage!
 
+export KSIZE=27      #Kmer size used (27 is a good start, higher kmers not tested so far)
 export KMCTHREADS=6  #kmc kmer counting of fastq files, number of threads
 export KMCJOBS=2     #kmc kmer counting of fastq files, number of kmc jobs running in parallel
                      #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
@@ -70,3 +71,9 @@ echo "Done."
 echo "counts of top significant kmers"
 pigz -dc KMCMERGED_pval$PVAL.tsv.gz |sort -k1,1g | cut -f 1-5 | uniq -c | head
 
+echo "Assembly of male/female specific kmers into contigs"
+pigz -dc KMCMERGED_pval$PVAL.tsv.gz | sort -k1,1g | mawk '{if(i!=0){i++;print ">kmer"i-1"_pval_"$1"\n"$6} else{i++}}' > kmers_pval$PVAL.fa
+idba_ud -l kmers_pval$PVAL.fa -o kmer-assembly --mink 17 --maxk $KSIZE --step 1 --no_local --no_coverage --no_correct --num_threads 4 --no_bubble --min_contig $KSIZE --similar 1 > kmer-pval$PVAL-assembly.log 2>&1
+cp kmer-assembly/contig-$KSIZE.fa kmer-pval$PVAL-assembly.fa
+
+echo "MERSEX pipeline finished."

@@ -12,35 +12,29 @@
 # "xyz." may be omitted or used as an additional unique identifier, if needed (see README.md for more explanations).
 
 #settings (currently optimized for server with =256 GB RAM, >=1TB FREE DISK, >=80 CPU THREADS)
-export LOWCOV=0      #Set to 1 for low sequencing coverage data (1-6x) per individual (genome skimming approaches), may increase runtime and disk usage!
 
-export KSIZE=27      #Kmer size used (27 is a good start, higher kmers not tested so far)
+export KSIZE=27       #Kmer size used (27 is a good start, higher kmers not tested so far)
+export MINCNT=2       #default is 2, works good for 6X - 20X genome seq. coverage; Set to 1 for lower or 3 for higher coverage per sample
 export KMCTHREADS=20  #kmc kmer counting of fastq files, number of threads
-export KMCJOBS=4     #kmc kmer counting of fastq files, number of kmc jobs running in parallel
-                     #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
-export KMCMEM=60     #max memory per KMC job
+export KMCJOBS=4      #kmc kmer counting of fastq files, number of kmc jobs running in parallel
+                      #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
+export KMCMEM=60      #max memory per KMC job
 
-export MERGE=6       #reading threads for kmc_merge (6 threads is typically enough, effects kmers/sec during merging)
+export MERGE=6        #reading threads for kmc_merge (6 threads is typically enough, effects kmers/sec during merging)
 
-export KPOS=1        #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
-export KNEG=0        #Kmer counts equal or lower are treated as no match (kmer absent in sample) in fisher test
-export PVAL=0.01     #P-value cut off, values equal or smaller than this go to signifcant sex differences table
-export PJOBS=8       #number of threads for creating significant sex differences table
+export KPOS=1         #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
+export KNEG=0         #Kmer counts equal or lower are treated as no match (kmer absent in sample) in fisher test
+export PVAL=0.01      #P-value cut off, values equal or smaller than this go to signifcant sex differences table
+export PJOBS=8        #number of threads for creating significant sex differences table
 
 #creating list of readfiles per sample id (for low coverage data we just use each file twice to meet the minimum kmer criteria of 2!)
-if [ $LOWCOV -eq 0 ]
-then
-        echo "USING DEFAULT MODE"
+
+        echo "Storing kmers with counts larger than $MINCNT into KMC-DBs (see MINCNT in options)"
         find males/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1 > "male-"a[2]".list"}'
         find females/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1 > "female-"a[2]".list"}'
-else
-        echo "USING LOW COVERAGE MODE"
-        find males/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1"\n"$1 > "male-"a[2]".list"}'
-        find females/| grep fq.gz$ | sort -V | awk '{split($1,a,/[/_]/);print $1"\n"$1 > "female-"a[2]".list"}'
-fi
 
 #CREATING KMC RUNs per sample
-ls *.list | awk -v cpu=$KMCTHREADS -v mem=$KMCMEM -v ksize=$KSIZE '{gsub(".list","");print "kmc -k"ksize" -sm"mem" -t"cpu" -r @"$1".list "$1" ./kmc_tmp_dir/ > "$1".kmc.log 2>&1"}' > KMC_BATCH.sh
+ls *.list | awk -v cpu=$KMCTHREADS -v mem=$KMCMEM -v ksize=$KSIZE -v mincnt=$MINCNT '{gsub(".list","");print "kmc -k"ksize" -ci"mincnt" -sm"mem" -t"cpu" -r @"$1".list "$1" ./kmc_tmp_dir/ > "$1".kmc.log 2>&1"}' > KMC_BATCH.sh
 
 #executing KMC runs
 mkdir ./kmc_tmp_dir

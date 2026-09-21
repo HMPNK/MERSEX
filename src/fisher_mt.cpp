@@ -12,19 +12,21 @@
 // Output: Fisher exact p \t a \t b \t c \t d \t original_line   (input order preserved)
 
 #include <algorithm>
+#include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <cmath>
 #include <deque>
+#include <fcntl.h>
 #include <getopt.h>
-#include <iostream>
-#include <cstdint>
 #include <map>
-#include <unordered_map>
 #include <mutex>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 struct Params {
@@ -33,15 +35,42 @@ struct Params {
     int    alt = 0;            // 0 = two-sided, 1 = less, 2 = greater, 3 = point probability
     long   fcount = -1;
     bool   header = false;
+    bool   stats = false;
     bool   use_pcut = false;
     double pcut = 1.0;
     unsigned threads = 0;      // 0 = 80% of hardware concurrency
     size_t batch = 1000000;    // lines per work unit
 };
 
+// Raw malloc'd byte buffer: unlike std::vector<char> it is never zero-filled and
+// grows with realloc (no copy for large blocks), which matters for huge batches.
+struct RawBuf {
+    char *p = nullptr;
+    size_t n = 0, cap = 0;
+    RawBuf() = default;
+    RawBuf(const RawBuf &) = delete;
+    RawBuf &operator=(const RawBuf &) = delete;
+    RawBuf(RawBuf &&o) noexcept : p(o.p), n(o.n), cap(o.cap) { o.p = nullptr; o.n = o.cap = 0; }
+    RawBuf &operator=(RawBuf &&o) noexcept {
+        if (this != &o) { std::free(p); p = o.p; n = o.n; cap = o.cap; o.p = nullptr; o.n = o.cap = 0; }
+        return *this;
+    }
+    ~RawBuf() { std::free(p); }
+    void reserve(size_t c) {
+        if (c <= cap) return;
+        size_t nc = std::max(c, cap + cap / 2);
+        char *q = (char *)std::realloc(p, nc);
+        if (!q) { std::fprintf(stderr, "out of memory\n"); std::abort(); }
+        p = q; cap = nc;
+    }
+    void release() { std::free(p); p = nullptr; n = cap = 0; }
+};
+
+// A batch = a block of complete, '\n'-terminated lines kept as one raw buffer
+// (no per-line allocation), plus the formatted output for those lines.
 struct Batch {
     size_t seq = 0;
-    std::vector<std::string> lines;
+    RawBuf data;
     std::string out;
 };
 
@@ -89,21 +118,40 @@ struct PCache {
     std::unordered_map<uint64_t, double> m;
 };
 
-static void process_line(const std::string &line, const Params &P, LogFact &lf, PCache &pc, std::string &out) {
+// Fast field -> number. Plain integers take a fast path; anything else
+// (decimals, exponents, nan/inf, empty, text) falls back to strtod on a copy.
+// Non-numeric text becomes 0, as before.
+static inline double parse_num(const char *s, const char *e) {
+    const char *q = s;
+    while (q < e && *q == ' ') q++;
+    bool neg = false;
+    if (q < e && (*q == '-' || *q == '+')) { neg = (*q == '-'); q++; }
+    const char *ds = q;
+    long long iv = 0;
+    while (q < e && (unsigned)(*q - '0') < 10u) { iv = iv * 10 + (*q - '0'); q++; }
+    size_t nd = (size_t)(q - ds);
+    if (nd > 0 && nd <= 15 && (q == e || (*q != '.' && *q != 'e' && *q != 'E')))
+        return neg ? -(double)iv : (double)iv;
+    std::string tmp(s, e);
+    return std::strtod(tmp.c_str(), nullptr);
+}
+
+static inline void process_line(const char *b, const char *e, const Params &P, LogFact &lf,
+                                PCache &pc, std::string &out) {
     long f = 0, f2 = 0, m = 0, m2 = 0;
     long field = 1;                       // 1-based field index, like AWK
-    size_t pos = 0, len = line.size();
+    const char *s = b;
     while (true) {
-        size_t end = line.find('\t', pos);
-        if (end == std::string::npos) end = len;
+        const char *t = (const char *)std::memchr(s, '\t', (size_t)(e - s));
+        const char *fe = t ? t : e;
         if (field >= 2) {
-            double v = std::strtod(std::string(line, pos, end - pos).c_str(), nullptr);
+            double v = parse_num(s, fe);
             bool grp1 = field <= P.fcount + 1;
             if (v >= P.cmin1)      { if (grp1) f++;  else m++;  }
             else if (v <= P.cmin2) { if (grp1) f2++; else m2++; }
         }
-        if (end >= len) break;
-        pos = end + 1;
+        if (!t) break;
+        s = t + 1;
         field++;
     }
 
@@ -125,7 +173,7 @@ static void process_line(const std::string &line, const Params &P, LogFact &lf, 
     char buf[128];
     int k = std::snprintf(buf, sizeof buf, "%.6g\t%ld\t%ld\t%ld\t%ld\t", p, f, f2, m, m2);
     out.append(buf, k);
-    out.append(line);
+    out.append(b, (size_t)(e - b));
     out.push_back('\n');
 }
 
@@ -138,32 +186,97 @@ static bool reading_done = false;
 static size_t total_batches = 0;
 static size_t max_queue = 8;
 
+using Clock = std::chrono::steady_clock;
+static inline double secs(Clock::time_point a, Clock::time_point b) {
+    return std::chrono::duration<double>(b - a).count();
+}
+
+// statistics (only reported with --stats)
+static double st_read_wait = 0;     // reader: time inside fread (waiting for upstream)
+static double st_push_wait = 0;     // reader: time blocked because all workers are busy
+static double st_worker_idle = 0;   // sum over workers: time waiting for input
+static size_t st_lines = 0, st_bytes = 0;
+
+// Reader: reads big blocks from stdin, cuts them into batches of P.batch lines,
+// hands them to the workers. Data is copied as little as possible.
 static void reader(const Params &P) {
-    Batch b;
+    const size_t CHUNK = 1 << 22;              // 4 MB per fread
+    RawBuf cur;
+    size_t start = 0;                          // start of the batch being assembled
+    size_t scan = 0;                           // next byte to scan for '\n'
+    size_t lines = 0;
     size_t seq = 0;
-    std::string line;
+
     auto push = [&](Batch &&bb) {
+        auto t0 = Clock::now();
         std::unique_lock<std::mutex> lk(mtx);
         cv_in.wait(lk, [] { return in_q.size() < max_queue; });
         in_q.push_back(std::move(bb));
         cv_in.notify_all();
+        st_push_wait += secs(t0, Clock::now());
     };
-    b.seq = seq;
-    while (std::getline(std::cin, line)) {
-        b.lines.push_back(std::move(line));
-        if (b.lines.size() >= P.batch) {
+
+    while (true) {
+        cur.reserve(cur.n + CHUNK);
+        auto t0 = Clock::now();
+        size_t n = std::fread(cur.p + cur.n, 1, CHUNK, stdin);
+        st_read_wait += secs(t0, Clock::now());
+        if (n == 0) break;
+        cur.n += n;
+        st_bytes += n;
+
+        while (true) {
+            const char *nl = (const char *)std::memchr(cur.p + scan, '\n', cur.n - scan);
+            if (!nl) { scan = cur.n; break; }
+            scan = (size_t)(nl - cur.p) + 1;
+            if (++lines < P.batch) continue;
+
+            // batch complete: bytes [start, scan)
+            st_lines += lines;
+            lines = 0;
+            size_t bytes = scan - start, tail = cur.n - scan;
+            Batch b;
+            b.seq = seq++;
+            if (start == 0 && bytes >= tail) {
+                // big batch: hand over the whole buffer, copy only the small tail
+                RawBuf nb;
+                nb.reserve(tail + CHUNK);
+                if (tail) std::memcpy(nb.p, cur.p + scan, tail);
+                nb.n = tail;
+                cur.n = scan;
+                b.data = std::move(cur);
+                cur = std::move(nb);
+                start = 0;
+                scan = 0;
+            } else {
+                // small batch: copy it out, keep working in the same buffer
+                b.data.reserve(bytes);
+                std::memcpy(b.data.p, cur.p + start, bytes);
+                b.data.n = bytes;
+                start = scan;
+            }
             push(std::move(b));
-            b = Batch();
-            b.seq = ++seq;
+        }
+        // drop what has been handed out, keep the unfinished tail
+        if (start > 0) {
+            std::memmove(cur.p, cur.p + start, cur.n - start);
+            cur.n -= start;
+            scan -= start;
+            start = 0;
         }
     }
+
+    // EOF: whatever is left is a final (possibly unterminated) batch
+    if (cur.n > 0) {
+        if (cur.p[cur.n - 1] != '\n') { cur.reserve(cur.n + 1); cur.p[cur.n++] = '\n'; }
+        for (size_t i = 0; i < cur.n; i++) st_lines += (cur.p[i] == '\n');
+        Batch b;
+        b.seq = seq++;
+        b.data = std::move(cur);
+        push(std::move(b));
+    }
     {
-        std::unique_lock<std::mutex> lk(mtx);
-        if (!b.lines.empty()) {
-            cv_in.wait(lk, [] { return in_q.size() < max_queue; });
-            in_q.push_back(std::move(b));
-            seq++;
-        }
+        std::lock_guard<std::mutex> lk(mtx);
         total_batches = seq;
         reading_done = true;
     }
@@ -174,20 +287,28 @@ static void reader(const Params &P) {
 static void worker(const Params &P) {
     LogFact lf;
     PCache pc;
+    double idle = 0;
     while (true) {
         Batch b;
         {
+            auto t0 = Clock::now();
             std::unique_lock<std::mutex> lk(mtx);
             cv_in.wait(lk, [] { return !in_q.empty() || reading_done; });
-            if (in_q.empty()) return;
+            idle += secs(t0, Clock::now());
+            if (in_q.empty()) { st_worker_idle += idle; return; }
             b = std::move(in_q.front());
             in_q.pop_front();
             cv_in.notify_all();
         }
-        b.out.reserve(b.lines.size() * 64);
-        for (const auto &l : b.lines) process_line(l, P, lf, pc, b.out);
-        b.lines.clear();
-        b.lines.shrink_to_fit();
+        const char *p = b.data.p;
+        const char *end = p + b.data.n;
+        while (p < end) {
+            const char *nl = (const char *)std::memchr(p, '\n', (size_t)(end - p));
+            if (!nl) nl = end;
+            process_line(p, nl, P, lf, pc, b.out);
+            p = nl + 1;
+        }
+        b.data.release();                      // free the input block early
         {
             std::lock_guard<std::mutex> lk(mtx);
             size_t s = b.seq;
@@ -212,6 +333,7 @@ static void usage(const char *prog) {
         "      --greater     one-sided, upper tail (enrichment in group 1)\n"
         "      --less        one-sided, lower tail (depletion in group 1)\n"
         "      --point       point probability P(X=a) only (not a p-value)\n"
+        "      --stats       print a throughput/bottleneck report to stderr at the end\n"
         "  -t, --threads T   worker threads                              [default: 80%% of cores]\n"
         "  -b, --batch B     lines per thread buffer                     [default 1000000]\n",
         prog);
@@ -233,6 +355,7 @@ int main(int argc, char **argv) {
         {"point", no_argument, nullptr, 1003},
         {"threads", required_argument, nullptr, 't'},
         {"batch", required_argument, nullptr, 'b'},
+        {"stats", no_argument, nullptr, 1004},
         {"help", no_argument, nullptr, 'h'},
         {nullptr, 0, nullptr, 0}};
     int c;
@@ -256,6 +379,7 @@ int main(int argc, char **argv) {
         case 1001: P.alt = 2; break;
         case 1002: P.alt = 1; break;
         case 1003: P.alt = 3; break;
+        case 1004: P.stats = true; break;
         case 't': P.threads = (unsigned)std::max(1L, std::atol(optarg)); break;
         case 'b': P.batch = (size_t)std::max(1L, std::atol(optarg)); break;
         default: usage(argv[0]); return c == 'h' ? 0 : 1;
@@ -268,16 +392,27 @@ int main(int argc, char **argv) {
     }
     max_queue = P.threads;   // bounds memory: at most ~2*threads batches in flight
 
-    std::ios::sync_with_stdio(false);
+#ifdef F_SETPIPE_SZ
+    // Bigger pipe buffers (default 64 KB) let the upstream decompressor run
+    // ahead instead of stalling on every small write. Harmless if not a pipe.
+    fcntl(0, F_SETPIPE_SZ, 1 << 20);
+    fcntl(1, F_SETPIPE_SZ, 1 << 20);
+#endif
+
     if (P.header) {
-        std::string hdr;
-        if (std::getline(std::cin, hdr)) {
+        char *hdr = nullptr;
+        size_t cap = 0;
+        ssize_t len = getline(&hdr, &cap, stdin);
+        if (len > 0) {
+            if (hdr[len - 1] == '\n') len--;
             std::fputs("pval\tgrp1_high\tgrp1_low\tgrp2_high\tgrp2_low\t", stdout);
-            std::fwrite(hdr.data(), 1, hdr.size(), stdout);
+            std::fwrite(hdr, 1, (size_t)len, stdout);
             std::fputc('\n', stdout);
         }
+        std::free(hdr);
     }
 
+    auto t_start = Clock::now();
     std::thread rd(reader, std::cref(P));
     std::vector<std::thread> pool;
     for (unsigned i = 0; i < P.threads; i++) pool.emplace_back(worker, std::cref(P));
@@ -303,5 +438,24 @@ int main(int argc, char **argv) {
     rd.join();
     for (auto &t : pool) t.join();
     std::fflush(stdout);
+
+    if (P.stats) {
+        double wall = secs(t_start, Clock::now());
+        double reader_busy = std::max(0.0, wall - st_read_wait - st_push_wait);
+        std::fprintf(stderr,
+            "--- fisher_mt stats ---\n"
+            "threads %u | %.0f lines | %.1f MB | %.2f s wall | %.1f MB/s | %.2f M lines/s\n"
+            "reader : %.0f%% waiting for input | %.0f%% blocked (workers all busy) | %.0f%% own work\n"
+            "workers: %.0f%% idle (waiting for input), on average\n",
+            P.threads, (double)st_lines, st_bytes / 1e6, wall, st_bytes / 1e6 / wall,
+            st_lines / 1e6 / wall,
+            100 * st_read_wait / wall, 100 * st_push_wait / wall, 100 * reader_busy / wall,
+            100 * st_worker_idle / (wall * P.threads));
+        std::fprintf(stderr,
+            "how to read this: workers mostly idle + reader mostly waiting for input -> upstream "
+            "(decompressor/pipe) is the limit;\n"
+            "                  workers mostly idle + reader 'own work' high -> reader is the limit;\n"
+            "                  reader mostly blocked -> workers are the limit (raise -t).\n");
+    }
     return 0;
 }

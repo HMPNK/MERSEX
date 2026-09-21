@@ -30,8 +30,3 @@ cd ..
 bash MERSEX.sh
 
 ```
-
-### Future plans
-a) integrate Fisher exact test in DB merging to speed things up more
-b) compile kmer average count calculator (not implemented in pipeline yet)
-g++ -O3 -march=native -mavx2 -std=c++17 -pthread -o kmer_avg_calc kmer_avg_calc.cpp

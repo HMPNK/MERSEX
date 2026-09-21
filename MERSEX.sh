@@ -22,7 +22,7 @@ export KMCJOBS=2     #kmc kmer counting of fastq files, number of kmc jobs runni
                      #Do not use more than 4 parallel jobs! IO is limiting! Instead use more kmc threads!
 export KMCMEM=60     #max memory per KMC job
 
-export MERGE=6       #reading threads for kmc_merge (the number of true CPU cores is optimal)
+export MERGE=6       #reading threads for kmc_merge (6 threads is typically enough, effects kmers/sec during merging)
 
 export KPOS=1        #Kmer counts equal or larger are treated as valid match (kmer present in sample) in fisher test
 export KNEG=0        #Kmer counts equal or lower are treated as no match (kmer absent in sample) in fisher test

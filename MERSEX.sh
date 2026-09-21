@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export LC_ALL=en_US.UTF-8 #Important for sort order of some outputs
 export LANG=en_US.UTF-8   #Important for sort order of some outputs
 #VERSION 0.3
 

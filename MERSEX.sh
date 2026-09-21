@@ -62,7 +62,7 @@ echo "Number of   male samples: "$MCOUNT
 
 #Extract significant sex differentiating kmers:
 echo "Extracting male/female specific kmers (p-value cutoff $PVAL)"
-rapidgzip -P $PJOBS -dc KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
+rapidgzip -P $PJOBS -d -c KMCMERGED.tsv.gz | ./fisher_mt -f $FCOUNT -H -p $PVAL --cmin1 $KPOS --cmin2 $KNEG | pigz -c > KMCMERGED_pval$PVAL.tsv.gz
 echo "Done."
 
 echo "counts of top significant kmers"

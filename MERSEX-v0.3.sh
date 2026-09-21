@@ -3,6 +3,8 @@ set -e
 set -o pipefail
 set -u
 
+#VERSION 0.3
+
 ##A PIPELINE FOR FINDING SEX-specific kmers ##
 #NOT for POOLSEX data! Needs wgs sequencing from individuals!
 #needs at least 6-10x whole genome coverage per sample

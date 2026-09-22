@@ -6,7 +6,7 @@ Identifying sex-linked genomic sequences directly from short-read data is a comm
 ### Prerequisites
 Install KMC, IDBA, GNU parallel, pigz and mawk
 ### Server requirements
-currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of ~1h.
+currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of ~2h.
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools

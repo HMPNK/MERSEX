@@ -10,7 +10,7 @@ currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools
-mamba create -n MERSEX -c bioconda kmc pigz mawk parallel idba rapidgzip
+mamba create -n MERSEX -c conda-forge -c bioconda kmc pigz mawk parallel idba rapidgzip
 
 #activate profile
 mamba activate MERSEX

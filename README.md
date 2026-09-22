@@ -40,5 +40,5 @@ bash MERSEX.sh > mersex.log 2>&1 &
 ### Latest changes v0.3:
 * streamlined pipeline, faster, less disk IO
 * C++ tool kmc_merge for fast and memory efficient DB merging (up to hundreds)
-* C++ tool fisher_mt for sex specific significance calculations and extraction of most significant kmers
+* C++ tool fisher_mt for sex bias significance calculations and extraction of most significant kmers
 * Assembly of significantly sex biased kmers into contigs

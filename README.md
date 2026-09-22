@@ -1,5 +1,7 @@
 # MERSEX
 ## SuperFast Kmer based / reference free sex marker search for wgs datasets
+Identifying sex-linked genomic sequences directly from short-read data is a common but computationally demanding step in non-model organism genomics, particularly for taxa lacking a reference genome or chromosome-level assembly. Here we present a k-mer-based pipeline for detecting sex-specific and sex-biased k-mers from whole-genome short-read sequencing of individually sexed samples (i.e., non-pooled data), together with two purpose-built C++ tools that make the approach tractable across hardware ranging from laptops and desktops to large multi-core servers, at cohort sizes from a handful of individuals up to hundreds of samples.
+
 ### Prerequisites
 Install KMC, IDBA, GNU parallel, pigz and mawk
 ### Server requirements

@@ -4,7 +4,7 @@
 Identifying sex-linked genomic sequences directly from short-read data is a common but computationally demanding step in non-model organism genomics, particularly for taxa lacking a reference genome or chromosome-level assembly. Here we present a k-mer-based pipeline for detecting sex-specific and sex-biased k-mers from whole-genome short-read sequencing of individually sexed samples (i.e., non-pooled data), together with two purpose-built C++ tools that make the approach tractable across hardware ranging from laptops and desktops to large multi-core servers, at cohort sizes from a handful of individuals up to hundreds of samples.
 
 ### Prerequisites
-Install KMC, IDBA, GNU parallel, pigz and mawk
+Install KMC, IDBA, GNU parallel, pigz, rapidgzip and mawk
 ### Server requirements
 currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of 1h44min.
 ### INSTALL BY CONDA/MAMBA

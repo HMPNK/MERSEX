@@ -8,7 +8,7 @@ Install KMC, IDBA, GNU parallel, pigz, rapidgzip and mawk
 ### Server requirements
 currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of **1h44min** (reading and writing on the same HDD, two disk system or SSD might improve the speed). 
 ### Comparison to alternative tool
-We ran the same dataset as above using the recently published MKMC tool (https://github.com/refresh-bio/MKMC), which uses a similar strategy for building multi-sample Kmer DB's. MKMC took **2h34min** just for building the data matrix on the same server and due to uncompressed output produced extremely large files ( 1.1TB in two highly redundant files: kmcdb binary and matrix file compared to the 116GB gzipped MERSEX matrix file).
+We ran the same dataset as above using the recently published MKMC tool (https://github.com/refresh-bio/MKMC), which uses a similar strategy for building multi-sample Kmer DB's. MKMC took **2h34min** just for building the data matrix on the same server and due to uncompressed output produced extremely large files ( 1.2TB in two highly redundant files: kmcdb binary and matrix file compared to the 116GB gzipped MERSEX matrix file).
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools

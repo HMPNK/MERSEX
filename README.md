@@ -6,7 +6,7 @@ Identifying sex-linked genomic sequences directly from short-read data is a comm
 ### Prerequisites
 Install KMC, IDBA, GNU parallel, pigz, rapidgzip and mawk
 ### Server requirements
-currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of 1h44min (reading and writing to the same HDD, two disk system or SSD might improve the speed). We ran the same dataset using the recently published MKMC tool, which uses a similar strategy for building multi-sample Kmer DB's. MKMC took >2h for the same task on the same server and due to uncompressed output produced extremely large files (~1TB in two highly redundant files: kmcdb binary and matrix file compared to the 116GB gzipped MERSEX matrix).
+currently parameters are set for a 96 CPU / 256+ GB RAM machine, processing 104 fish genomes (7-14Gbp reads per individual, in total 705 Gbyte fastq.gz ) had a peak mem usage of approximately 128 Gb and a runtime of 1h44min (reading and writing on the same HDD, two disk system or SSD might improve the speed). We ran the same dataset using the recently published MKMC tool, which uses a similar strategy for building multi-sample Kmer DB's. MKMC took >2h for the same task on the same server and due to uncompressed output produced extremely large files (~1TB in two highly redundant files: kmcdb binary and matrix file compared to the 116GB gzipped MERSEX matrix).
 ### INSTALL BY CONDA/MAMBA
 ```sh
 #create conda/mamba profile and install tools
